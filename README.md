@@ -27,20 +27,31 @@ The response field `status` gives the overall application result (`VALID`, `INCO
 
 ### Start a partial application
 
+```sh
+curl -i http://127.0.0.1:8000/api/v1/fafsa/evaluate \
+  -H 'Content-Type: application/json' -d '{"dependencyStatus": "independent"}'
+```
+
 **Stage 1: `stage_statuses`** (only stage reached). The applicant has started the form. The engine knows their dependency status, but needs their marital status to choose a second stage.
 
 1. **Stage 1 (root): `stage_statuses`.** This stage requires two answers. The first, `dependencyStatus = "independent"`, is an allowed choice and returns `VALID`. The second required field, `maritalStatus`, is missing.
 2. **Stop at the root.** The engine adds `maritalStatus` to `outstanding`. It needs both answers to call `application_stage()`, so it stops before selecting the next stage.
 3. **Return `INCOMPLETE`.** The only submitted answer passed. The client can send the cumulative answers again after collecting `maritalStatus`.
 
-```sh
-curl -i http://127.0.0.1:8000/api/v1/fafsa/evaluate \
-  -H 'Content-Type: application/json' -d '{"dependencyStatus": "independent"}'
-```
-
 ---
 
 ### Complete an independent, single application
+
+```sh
+curl -i http://127.0.0.1:8000/api/v1/fafsa/evaluate \
+  -H 'Content-Type: application/json' -d '{
+    "dependencyStatus": "independent", "maritalStatus": "single",
+    "studentInfo": {"firstName":"Jane","lastName":"Smith","dateOfBirth":"2003-05-15","ssn":"123456789"},
+    "income": {"studentIncome":5000},
+    "household": {"numberInHousehold":4,"numberInCollege":1},
+    "stateOfResidence": "CA"
+  }'
+```
 
 **Stage 1: `stage_statuses` → Stage 2: `stage_independent_single`.** The first stage uses two answers to choose a checklist. For a single, independent applicant, the second stage requires student, income, household, and residence information. Parent income and spouse details are optional on this path.
 
@@ -61,20 +72,20 @@ curl -i http://127.0.0.1:8000/api/v1/fafsa/evaluate \
 
 **Response.** All required fields in this final stage passed, so the application is `VALID` and `outstanding` is empty.
 
+---
+
+### Change the applicant to dependent
+
 ```sh
 curl -i http://127.0.0.1:8000/api/v1/fafsa/evaluate \
   -H 'Content-Type: application/json' -d '{
-    "dependencyStatus": "independent", "maritalStatus": "single",
+    "dependencyStatus": "dependent", "maritalStatus": "single",
     "studentInfo": {"firstName":"Jane","lastName":"Smith","dateOfBirth":"2003-05-15","ssn":"123456789"},
     "income": {"studentIncome":5000},
     "household": {"numberInHousehold":4,"numberInCollege":1},
     "stateOfResidence": "CA"
   }'
 ```
-
----
-
-### Change the applicant to dependent
 
 **Stage 1: `stage_statuses` → Stage 2: `stage_dependent_single`.** Compare this request with the independent, single example. Changing just `dependencyStatus` switches the second stage and adds one required field, `income.parentIncome`.
 
@@ -96,20 +107,20 @@ curl -i http://127.0.0.1:8000/api/v1/fafsa/evaluate \
 
 **Response.** Every supplied field passed. The omitted fields in the table appear in `outstanding`, so the application is `INCOMPLETE`.
 
+---
+
+### Change the applicant to married
+
 ```sh
 curl -i http://127.0.0.1:8000/api/v1/fafsa/evaluate \
   -H 'Content-Type: application/json' -d '{
-    "dependencyStatus": "dependent", "maritalStatus": "single",
+    "dependencyStatus": "independent", "maritalStatus": "married",
     "studentInfo": {"firstName":"Jane","lastName":"Smith","dateOfBirth":"2003-05-15","ssn":"123456789"},
     "income": {"studentIncome":5000},
     "household": {"numberInHousehold":4,"numberInCollege":1},
     "stateOfResidence": "CA"
   }'
 ```
-
----
-
-### Change the applicant to married
 
 **Stage 1: `stage_statuses` → Stage 2: `stage_independent_married`.** Compare this request with the independent, single example. Changing just `maritalStatus` switches the second stage and makes the spouse’s name and SSN required.
 
@@ -133,43 +144,9 @@ curl -i http://127.0.0.1:8000/api/v1/fafsa/evaluate \
 
 **Response.** Every supplied field passed. The omitted fields in the table appear in `outstanding`, so the application is `INCOMPLETE`.
 
-```sh
-curl -i http://127.0.0.1:8000/api/v1/fafsa/evaluate \
-  -H 'Content-Type: application/json' -d '{
-    "dependencyStatus": "independent", "maritalStatus": "married",
-    "studentInfo": {"firstName":"Jane","lastName":"Smith","dateOfBirth":"2003-05-15","ssn":"123456789"},
-    "income": {"studentIncome":5000},
-    "household": {"numberInHousehold":4,"numberInCollege":1},
-    "stateOfResidence": "CA"
-  }'
-```
-
 ---
 
 ### Complete a dependent, married application
-
-**Stage 1: `stage_statuses` → Stage 2: `stage_dependent_married`.** Both answers affect the checklist. Being dependent adds parent income. Being married adds spouse details. This applicant supplies both.
-
-1. **Stage 1 (root): `stage_statuses`.** This stage requires `dependencyStatus` (allowed values: `dependent`, `independent`) and `maritalStatus` (allowed values: `single`, `married`). This request supplies `"dependent"` and `"married"`, respectively. Both checks return `VALID`.
-2. **Follow the transition.** Because both fields passed, the engine calls `application_stage(payload)` in `core/stages.py`. For this request, `"stage_" + "dependent" + "_" + "married"` produces `"stage_dependent_married"`. The engine looks up that exact stage in the graph. [Stage graph and transition function](core/stages.py)
-3. **Stage 2: `stage_dependent_married`.** The engine checks each field below in order and collects its result before returning the response.
-
-| Required field | Value in this request | Check result |
-| --- | --- | --- |
-| `studentInfo.firstName` | `"Jane"` | `VALID` |
-| `studentInfo.lastName` | `"Smith"` | `VALID` |
-| `studentInfo.dateOfBirth` | `"2003-05-15"` | `VALID` |
-| `studentInfo.ssn` | `"123456789"` | `VALID` |
-| `income.studentIncome` | `5000` | `VALID` |
-| `household.numberInHousehold` | `4` | `VALID` |
-| `household.numberInCollege` | `1` | `VALID` |
-| `stateOfResidence` | `"CA"` | `VALID` |
-| `income.parentIncome` | `65000` | `VALID` |
-| `spouseInfo.firstName` | `"Sam"` | `VALID` |
-| `spouseInfo.lastName` | `"Smith"` | `VALID` |
-| `spouseInfo.ssn` | `"321456789"` | `VALID` |
-
-**Response.** All required fields in this final stage passed, so the application is `VALID` and `outstanding` is empty.
 
 ```sh
 curl -i http://127.0.0.1:8000/api/v1/fafsa/evaluate \
@@ -199,9 +176,54 @@ curl -i http://127.0.0.1:8000/api/v1/fafsa/evaluate \
 }'
 ```
 
+**Stage 1: `stage_statuses` → Stage 2: `stage_dependent_married`.** Both answers affect the checklist. Being dependent adds parent income. Being married adds spouse details. This applicant supplies both.
+
+1. **Stage 1 (root): `stage_statuses`.** This stage requires `dependencyStatus` (allowed values: `dependent`, `independent`) and `maritalStatus` (allowed values: `single`, `married`). This request supplies `"dependent"` and `"married"`, respectively. Both checks return `VALID`.
+2. **Follow the transition.** Because both fields passed, the engine calls `application_stage(payload)` in `core/stages.py`. For this request, `"stage_" + "dependent" + "_" + "married"` produces `"stage_dependent_married"`. The engine looks up that exact stage in the graph. [Stage graph and transition function](core/stages.py)
+3. **Stage 2: `stage_dependent_married`.** The engine checks each field below in order and collects its result before returning the response.
+
+| Required field | Value in this request | Check result |
+| --- | --- | --- |
+| `studentInfo.firstName` | `"Jane"` | `VALID` |
+| `studentInfo.lastName` | `"Smith"` | `VALID` |
+| `studentInfo.dateOfBirth` | `"2003-05-15"` | `VALID` |
+| `studentInfo.ssn` | `"123456789"` | `VALID` |
+| `income.studentIncome` | `5000` | `VALID` |
+| `household.numberInHousehold` | `4` | `VALID` |
+| `household.numberInCollege` | `1` | `VALID` |
+| `stateOfResidence` | `"CA"` | `VALID` |
+| `income.parentIncome` | `65000` | `VALID` |
+| `spouseInfo.firstName` | `"Sam"` | `VALID` |
+| `spouseInfo.lastName` | `"Smith"` | `VALID` |
+| `spouseInfo.ssn` | `"321456789"` | `VALID` |
+
+**Response.** All required fields in this final stage passed, so the application is `VALID` and `outstanding` is empty.
+
 ---
 
 ### See failed checks and missing answers together
+
+```sh
+curl -i http://127.0.0.1:8000/api/v1/fafsa/evaluate \
+  -H 'Content-Type: application/json' -d '{
+  "studentInfo": {
+    "firstName": "John",
+    "lastName": "Doe",
+    "dateOfBirth": "2015-01-01",
+    "ssn": "invalid"
+  },
+  "dependencyStatus": "dependent",
+  "maritalStatus": "married",
+  "income": {
+    "studentIncome": -1000
+  },
+  "household": {
+    "numberInHousehold": 2,
+    "numberInCollege": 5
+  },
+  "stateOfResidence": "XX"
+}'
+```
 
 **Stage 1: `stage_statuses` → Stage 2: `stage_dependent_married`.** This applicant gives the same two routing answers as the previous applicant. They reach the same second stage, where several supplied values fail and four required answers are missing.
 
@@ -226,31 +248,14 @@ curl -i http://127.0.0.1:8000/api/v1/fafsa/evaluate \
 
 **Response.** The engine returns `INVALID` because supplied values failed validation. Their messages appear in `submitted`, and the four omitted fields appear in `outstanding`.
 
-```sh
-curl -i http://127.0.0.1:8000/api/v1/fafsa/evaluate \
-  -H 'Content-Type: application/json' -d '{
-  "studentInfo": {
-    "firstName": "John",
-    "lastName": "Doe",
-    "dateOfBirth": "2015-01-01",
-    "ssn": "invalid"
-  },
-  "dependencyStatus": "dependent",
-  "maritalStatus": "married",
-  "income": {
-    "studentIncome": -1000
-  },
-  "household": {
-    "numberInHousehold": 2,
-    "numberInCollege": 5
-  },
-  "stateOfResidence": "XX"
-}'
-```
-
 ---
 
 ### Send fields before their stage is reached
+
+```sh
+curl -i http://127.0.0.1:8000/api/v1/fafsa/evaluate \
+  -H 'Content-Type: application/json' -d '{"dependencyStatus":"independent","stateOfResidence":"CA","favoriteColor":"blue"}'
+```
 
 **Stage 1: `stage_statuses`** (only stage reached). The engine cannot select the second stage yet. It can still give the applicant feedback on the state and the unfamiliar field they already sent.
 
@@ -259,24 +264,19 @@ curl -i http://127.0.0.1:8000/api/v1/fafsa/evaluate \
 3. **Check the other supplied fields.** The catalog recognizes `stateOfResidence = "CA"` and returns `VALID`. It has no entry for `favoriteColor`, so the engine records an `INVALID` result for that field.
 4. **Return `INVALID`.** All three supplied fields appear in `submitted`. Only `maritalStatus` appears in `outstanding`.
 
-```sh
-curl -i http://127.0.0.1:8000/api/v1/fafsa/evaluate \
-  -H 'Content-Type: application/json' -d '{"dependencyStatus":"independent","stateOfResidence":"CA","favoriteColor":"blue"}'
-```
-
 ---
 
 ### Send an empty request object
-
-**Zero stages reached.** FastAPI checks the request body before passing an application to the stage engine. An empty JSON object fails that first check.
-
-1. FastAPI checks the request against `EvaluationRequest`. The empty object supplies neither application fields nor a `cumulative_payload` dictionary. [api/schemas.py](api/schemas.py)
-2. FastAPI returns HTTP 422 with a `detail` message before calling the engine. The root stage never runs.
 
 ```sh
 curl -i http://127.0.0.1:8000/api/v1/fafsa/evaluate \
   -H 'Content-Type: application/json' -d '{}'
 ```
+
+**Zero stages reached.** FastAPI checks the request body before passing an application to the stage engine. An empty JSON object fails that first check.
+
+1. FastAPI checks the request against `EvaluationRequest`. The empty object supplies neither application fields nor a `cumulative_payload` dictionary. [api/schemas.py](api/schemas.py)
+2. FastAPI returns HTTP 422 with a `detail` message before calling the engine. The root stage never runs.
 
 ## Run tests
 
