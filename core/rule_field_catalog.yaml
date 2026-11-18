@@ -1,0 +1,42 @@
+# Field order within a stage lives in stages.py.
+rules:
+  validate_name_length:
+    module: rules.validate_name_length:validate_name_length
+    params: {min: 1, max: 50}
+    severity: ERROR
+  validate_student_age:
+    module: rules.validate_student_age:validate_student_age
+    severity: ERROR
+  validate_ssn_format:
+    module: rules.validate_ssn_format:validate_ssn_format
+    severity: ERROR
+  validate_non_negative_amount:
+    module: rules.validate_non_negative_amount:validate_non_negative_amount
+    severity: ERROR
+  validate_household_count:
+    module: rules.validate_household_count:validate_household_count
+    severity: ERROR
+  validate_state_code:
+    module: rules.validate_state_code:validate_state_code
+    severity: ERROR
+  validate_choice:
+    module: rules.validate_choice:validate_choice
+    severity: ERROR
+
+fields:
+  studentInfo.firstName: [{rule: validate_name_length}]
+  studentInfo.lastName: [{rule: validate_name_length}]
+  studentInfo.dateOfBirth: [{rule: validate_student_age}]
+  studentInfo.ssn: [{rule: validate_ssn_format}]
+  dependencyStatus: [{rule: validate_choice, params: {choices: [dependent, independent]}}]
+  maritalStatus: [{rule: validate_choice, params: {choices: [single, married]}}]
+  spouseInfo.firstName: [{rule: validate_name_length}]
+  spouseInfo.lastName: [{rule: validate_name_length}]
+  spouseInfo.ssn: [{rule: validate_ssn_format}]
+  income.studentIncome: [{rule: validate_non_negative_amount}]
+  income.parentIncome: [{rule: validate_non_negative_amount}]
+  household.numberInHousehold: [{rule: validate_household_count}]
+  household.numberInCollege:
+    - rule: validate_household_count
+      inputs: {household_size: household.numberInHousehold}
+  stateOfResidence: [{rule: validate_state_code}]

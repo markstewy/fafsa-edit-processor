@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fafsa-rule-processor"
+version = "1.0.0a1"
+requires-python = ">=3.9"
+dependencies = [
+    "fastapi>=0.110,<1",
+    "pydantic>=2.6,<3",
+    "PyYAML>=6,<7",
+    "uvicorn>=0.27,<1",
+]
+
+[project.optional-dependencies]
+test = ["coverage[toml]>=7,<8", "httpx>=0.27,<0.29"]
+
+[tool.setuptools.packages.find]
+include = ["api", "core", "rules", "rules.*"]
+
+[tool.setuptools.package-data]
+core = ["rule_field_catalog.yaml"]
+
+[tool.coverage.run]
+source = ["api", "core", "rules"]
+
+[tool.coverage.report]
+fail_under = 90
+show_missing = true
