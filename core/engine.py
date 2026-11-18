@@ -9,6 +9,7 @@ import yaml
 from core.stages import STAGE_GRAPH
 
 
+# Rules stay fixed for a release, so parse the YAML once per worker.
 @lru_cache(maxsize=1)
 def _load_rules_catalog():
     with Path(__file__).with_name("rule_field_catalog.yaml").open() as stream:
