@@ -38,6 +38,32 @@ curl -i http://127.0.0.1:8000/api/v1/fafsa/evaluate \
 2. **Stop at the root.** The engine adds `maritalStatus` to `outstanding`. It needs both answers to call `application_stage()`, so it stops before selecting the next stage.
 3. **Return `INCOMPLETE`.** The only submitted answer passed. The client can send the cumulative answers again after collecting `maritalStatus`.
 
+<details>
+<summary>Expected output · HTTP 200 OK · INCOMPLETE</summary>
+
+```json
+{
+  "status": "INCOMPLETE",
+  "submitted": [
+    {
+      "field_name": "dependencyStatus",
+      "status": "VALID",
+      "violation_message": null,
+      "rule_name": "validate_choice",
+      "severity": "ERROR"
+    }
+  ],
+  "outstanding": [
+    "maritalStatus"
+  ],
+  "info": {
+    "version": "1.0.0-alpha.1"
+  }
+}
+```
+
+</details>
+
 ---
 
 ### Complete an independent, single application
@@ -71,6 +97,93 @@ curl -i http://127.0.0.1:8000/api/v1/fafsa/evaluate \
 | `stateOfResidence` | `"CA"` | `VALID` |
 
 **Response.** All required fields in this final stage passed, so the application is `VALID` and `outstanding` is empty.
+
+<details>
+<summary>Expected output · HTTP 200 OK · VALID</summary>
+
+```json
+{
+  "status": "VALID",
+  "submitted": [
+    {
+      "field_name": "dependencyStatus",
+      "status": "VALID",
+      "violation_message": null,
+      "rule_name": "validate_choice",
+      "severity": "ERROR"
+    },
+    {
+      "field_name": "maritalStatus",
+      "status": "VALID",
+      "violation_message": null,
+      "rule_name": "validate_choice",
+      "severity": "ERROR"
+    },
+    {
+      "field_name": "studentInfo.firstName",
+      "status": "VALID",
+      "violation_message": null,
+      "rule_name": "validate_name_length",
+      "severity": "ERROR"
+    },
+    {
+      "field_name": "studentInfo.lastName",
+      "status": "VALID",
+      "violation_message": null,
+      "rule_name": "validate_name_length",
+      "severity": "ERROR"
+    },
+    {
+      "field_name": "studentInfo.dateOfBirth",
+      "status": "VALID",
+      "violation_message": null,
+      "rule_name": "validate_student_age",
+      "severity": "ERROR"
+    },
+    {
+      "field_name": "studentInfo.ssn",
+      "status": "VALID",
+      "violation_message": null,
+      "rule_name": "validate_ssn_format",
+      "severity": "ERROR"
+    },
+    {
+      "field_name": "income.studentIncome",
+      "status": "VALID",
+      "violation_message": null,
+      "rule_name": "validate_non_negative_amount",
+      "severity": "ERROR"
+    },
+    {
+      "field_name": "household.numberInHousehold",
+      "status": "VALID",
+      "violation_message": null,
+      "rule_name": "validate_household_count",
+      "severity": "ERROR"
+    },
+    {
+      "field_name": "household.numberInCollege",
+      "status": "VALID",
+      "violation_message": null,
+      "rule_name": "validate_household_count",
+      "severity": "ERROR"
+    },
+    {
+      "field_name": "stateOfResidence",
+      "status": "VALID",
+      "violation_message": null,
+      "rule_name": "validate_state_code",
+      "severity": "ERROR"
+    }
+  ],
+  "outstanding": [],
+  "info": {
+    "version": "1.0.0-alpha.1"
+  }
+}
+```
+
+</details>
 
 ---
 
@@ -106,6 +219,95 @@ curl -i http://127.0.0.1:8000/api/v1/fafsa/evaluate \
 | `income.parentIncome` | Omitted | Added to `outstanding` |
 
 **Response.** Every supplied field passed. The omitted fields in the table appear in `outstanding`, so the application is `INCOMPLETE`.
+
+<details>
+<summary>Expected output · HTTP 200 OK · INCOMPLETE</summary>
+
+```json
+{
+  "status": "INCOMPLETE",
+  "submitted": [
+    {
+      "field_name": "dependencyStatus",
+      "status": "VALID",
+      "violation_message": null,
+      "rule_name": "validate_choice",
+      "severity": "ERROR"
+    },
+    {
+      "field_name": "maritalStatus",
+      "status": "VALID",
+      "violation_message": null,
+      "rule_name": "validate_choice",
+      "severity": "ERROR"
+    },
+    {
+      "field_name": "studentInfo.firstName",
+      "status": "VALID",
+      "violation_message": null,
+      "rule_name": "validate_name_length",
+      "severity": "ERROR"
+    },
+    {
+      "field_name": "studentInfo.lastName",
+      "status": "VALID",
+      "violation_message": null,
+      "rule_name": "validate_name_length",
+      "severity": "ERROR"
+    },
+    {
+      "field_name": "studentInfo.dateOfBirth",
+      "status": "VALID",
+      "violation_message": null,
+      "rule_name": "validate_student_age",
+      "severity": "ERROR"
+    },
+    {
+      "field_name": "studentInfo.ssn",
+      "status": "VALID",
+      "violation_message": null,
+      "rule_name": "validate_ssn_format",
+      "severity": "ERROR"
+    },
+    {
+      "field_name": "income.studentIncome",
+      "status": "VALID",
+      "violation_message": null,
+      "rule_name": "validate_non_negative_amount",
+      "severity": "ERROR"
+    },
+    {
+      "field_name": "household.numberInHousehold",
+      "status": "VALID",
+      "violation_message": null,
+      "rule_name": "validate_household_count",
+      "severity": "ERROR"
+    },
+    {
+      "field_name": "household.numberInCollege",
+      "status": "VALID",
+      "violation_message": null,
+      "rule_name": "validate_household_count",
+      "severity": "ERROR"
+    },
+    {
+      "field_name": "stateOfResidence",
+      "status": "VALID",
+      "violation_message": null,
+      "rule_name": "validate_state_code",
+      "severity": "ERROR"
+    }
+  ],
+  "outstanding": [
+    "income.parentIncome"
+  ],
+  "info": {
+    "version": "1.0.0-alpha.1"
+  }
+}
+```
+
+</details>
 
 ---
 
@@ -143,6 +345,97 @@ curl -i http://127.0.0.1:8000/api/v1/fafsa/evaluate \
 | `spouseInfo.ssn` | Omitted | Added to `outstanding` |
 
 **Response.** Every supplied field passed. The omitted fields in the table appear in `outstanding`, so the application is `INCOMPLETE`.
+
+<details>
+<summary>Expected output · HTTP 200 OK · INCOMPLETE</summary>
+
+```json
+{
+  "status": "INCOMPLETE",
+  "submitted": [
+    {
+      "field_name": "dependencyStatus",
+      "status": "VALID",
+      "violation_message": null,
+      "rule_name": "validate_choice",
+      "severity": "ERROR"
+    },
+    {
+      "field_name": "maritalStatus",
+      "status": "VALID",
+      "violation_message": null,
+      "rule_name": "validate_choice",
+      "severity": "ERROR"
+    },
+    {
+      "field_name": "studentInfo.firstName",
+      "status": "VALID",
+      "violation_message": null,
+      "rule_name": "validate_name_length",
+      "severity": "ERROR"
+    },
+    {
+      "field_name": "studentInfo.lastName",
+      "status": "VALID",
+      "violation_message": null,
+      "rule_name": "validate_name_length",
+      "severity": "ERROR"
+    },
+    {
+      "field_name": "studentInfo.dateOfBirth",
+      "status": "VALID",
+      "violation_message": null,
+      "rule_name": "validate_student_age",
+      "severity": "ERROR"
+    },
+    {
+      "field_name": "studentInfo.ssn",
+      "status": "VALID",
+      "violation_message": null,
+      "rule_name": "validate_ssn_format",
+      "severity": "ERROR"
+    },
+    {
+      "field_name": "income.studentIncome",
+      "status": "VALID",
+      "violation_message": null,
+      "rule_name": "validate_non_negative_amount",
+      "severity": "ERROR"
+    },
+    {
+      "field_name": "household.numberInHousehold",
+      "status": "VALID",
+      "violation_message": null,
+      "rule_name": "validate_household_count",
+      "severity": "ERROR"
+    },
+    {
+      "field_name": "household.numberInCollege",
+      "status": "VALID",
+      "violation_message": null,
+      "rule_name": "validate_household_count",
+      "severity": "ERROR"
+    },
+    {
+      "field_name": "stateOfResidence",
+      "status": "VALID",
+      "violation_message": null,
+      "rule_name": "validate_state_code",
+      "severity": "ERROR"
+    }
+  ],
+  "outstanding": [
+    "spouseInfo.firstName",
+    "spouseInfo.lastName",
+    "spouseInfo.ssn"
+  ],
+  "info": {
+    "version": "1.0.0-alpha.1"
+  }
+}
+```
+
+</details>
 
 ---
 
@@ -199,6 +492,121 @@ curl -i http://127.0.0.1:8000/api/v1/fafsa/evaluate \
 
 **Response.** All required fields in this final stage passed, so the application is `VALID` and `outstanding` is empty.
 
+<details>
+<summary>Expected output · HTTP 200 OK · VALID</summary>
+
+```json
+{
+  "status": "VALID",
+  "submitted": [
+    {
+      "field_name": "dependencyStatus",
+      "status": "VALID",
+      "violation_message": null,
+      "rule_name": "validate_choice",
+      "severity": "ERROR"
+    },
+    {
+      "field_name": "maritalStatus",
+      "status": "VALID",
+      "violation_message": null,
+      "rule_name": "validate_choice",
+      "severity": "ERROR"
+    },
+    {
+      "field_name": "studentInfo.firstName",
+      "status": "VALID",
+      "violation_message": null,
+      "rule_name": "validate_name_length",
+      "severity": "ERROR"
+    },
+    {
+      "field_name": "studentInfo.lastName",
+      "status": "VALID",
+      "violation_message": null,
+      "rule_name": "validate_name_length",
+      "severity": "ERROR"
+    },
+    {
+      "field_name": "studentInfo.dateOfBirth",
+      "status": "VALID",
+      "violation_message": null,
+      "rule_name": "validate_student_age",
+      "severity": "ERROR"
+    },
+    {
+      "field_name": "studentInfo.ssn",
+      "status": "VALID",
+      "violation_message": null,
+      "rule_name": "validate_ssn_format",
+      "severity": "ERROR"
+    },
+    {
+      "field_name": "income.studentIncome",
+      "status": "VALID",
+      "violation_message": null,
+      "rule_name": "validate_non_negative_amount",
+      "severity": "ERROR"
+    },
+    {
+      "field_name": "household.numberInHousehold",
+      "status": "VALID",
+      "violation_message": null,
+      "rule_name": "validate_household_count",
+      "severity": "ERROR"
+    },
+    {
+      "field_name": "household.numberInCollege",
+      "status": "VALID",
+      "violation_message": null,
+      "rule_name": "validate_household_count",
+      "severity": "ERROR"
+    },
+    {
+      "field_name": "stateOfResidence",
+      "status": "VALID",
+      "violation_message": null,
+      "rule_name": "validate_state_code",
+      "severity": "ERROR"
+    },
+    {
+      "field_name": "income.parentIncome",
+      "status": "VALID",
+      "violation_message": null,
+      "rule_name": "validate_non_negative_amount",
+      "severity": "ERROR"
+    },
+    {
+      "field_name": "spouseInfo.firstName",
+      "status": "VALID",
+      "violation_message": null,
+      "rule_name": "validate_name_length",
+      "severity": "ERROR"
+    },
+    {
+      "field_name": "spouseInfo.lastName",
+      "status": "VALID",
+      "violation_message": null,
+      "rule_name": "validate_name_length",
+      "severity": "ERROR"
+    },
+    {
+      "field_name": "spouseInfo.ssn",
+      "status": "VALID",
+      "violation_message": null,
+      "rule_name": "validate_ssn_format",
+      "severity": "ERROR"
+    }
+  ],
+  "outstanding": [],
+  "info": {
+    "version": "1.0.0-alpha.1"
+  }
+}
+```
+
+</details>
+
 ---
 
 ### See failed checks and missing answers together
@@ -248,6 +656,98 @@ curl -i http://127.0.0.1:8000/api/v1/fafsa/evaluate \
 
 **Response.** The engine returns `INVALID` because supplied values failed validation. Their messages appear in `submitted`, and the four omitted fields appear in `outstanding`.
 
+<details>
+<summary>Expected output · HTTP 200 OK · INVALID</summary>
+
+```json
+{
+  "status": "INVALID",
+  "submitted": [
+    {
+      "field_name": "dependencyStatus",
+      "status": "VALID",
+      "violation_message": null,
+      "rule_name": "validate_choice",
+      "severity": "ERROR"
+    },
+    {
+      "field_name": "maritalStatus",
+      "status": "VALID",
+      "violation_message": null,
+      "rule_name": "validate_choice",
+      "severity": "ERROR"
+    },
+    {
+      "field_name": "studentInfo.firstName",
+      "status": "VALID",
+      "violation_message": null,
+      "rule_name": "validate_name_length",
+      "severity": "ERROR"
+    },
+    {
+      "field_name": "studentInfo.lastName",
+      "status": "VALID",
+      "violation_message": null,
+      "rule_name": "validate_name_length",
+      "severity": "ERROR"
+    },
+    {
+      "field_name": "studentInfo.dateOfBirth",
+      "status": "INVALID",
+      "violation_message": "Student must be at least 14 years old.",
+      "rule_name": "validate_student_age",
+      "severity": "ERROR"
+    },
+    {
+      "field_name": "studentInfo.ssn",
+      "status": "INVALID",
+      "violation_message": "Must be a valid 9-digit Social Security Number.",
+      "rule_name": "validate_ssn_format",
+      "severity": "ERROR"
+    },
+    {
+      "field_name": "income.studentIncome",
+      "status": "INVALID",
+      "violation_message": "Amount cannot be negative.",
+      "rule_name": "validate_non_negative_amount",
+      "severity": "ERROR"
+    },
+    {
+      "field_name": "household.numberInHousehold",
+      "status": "VALID",
+      "violation_message": null,
+      "rule_name": "validate_household_count",
+      "severity": "ERROR"
+    },
+    {
+      "field_name": "household.numberInCollege",
+      "status": "INVALID",
+      "violation_message": "Number in college cannot exceed number in household.",
+      "rule_name": "validate_household_count",
+      "severity": "ERROR"
+    },
+    {
+      "field_name": "stateOfResidence",
+      "status": "INVALID",
+      "violation_message": "Enter a two-letter US state abbreviation in uppercase.",
+      "rule_name": "validate_state_code",
+      "severity": "ERROR"
+    }
+  ],
+  "outstanding": [
+    "income.parentIncome",
+    "spouseInfo.firstName",
+    "spouseInfo.lastName",
+    "spouseInfo.ssn"
+  ],
+  "info": {
+    "version": "1.0.0-alpha.1"
+  }
+}
+```
+
+</details>
+
 ---
 
 ### Send fields before their stage is reached
@@ -264,6 +764,46 @@ curl -i http://127.0.0.1:8000/api/v1/fafsa/evaluate \
 3. **Check the other supplied fields.** The catalog recognizes `stateOfResidence = "CA"` and returns `VALID`. It has no entry for `favoriteColor`, so the engine records an `INVALID` result for that field.
 4. **Return `INVALID`.** All three supplied fields appear in `submitted`. Only `maritalStatus` appears in `outstanding`.
 
+<details>
+<summary>Expected output · HTTP 200 OK · INVALID</summary>
+
+```json
+{
+  "status": "INVALID",
+  "submitted": [
+    {
+      "field_name": "dependencyStatus",
+      "status": "VALID",
+      "violation_message": null,
+      "rule_name": "validate_choice",
+      "severity": "ERROR"
+    },
+    {
+      "field_name": "stateOfResidence",
+      "status": "VALID",
+      "violation_message": null,
+      "rule_name": "validate_state_code",
+      "severity": "ERROR"
+    },
+    {
+      "field_name": "favoriteColor",
+      "status": "INVALID",
+      "violation_message": "Unrecognized application field.",
+      "rule_name": null,
+      "severity": "ERROR"
+    }
+  ],
+  "outstanding": [
+    "maritalStatus"
+  ],
+  "info": {
+    "version": "1.0.0-alpha.1"
+  }
+}
+```
+
+</details>
+
 ---
 
 ### Send an empty request object
@@ -277,6 +817,27 @@ curl -i http://127.0.0.1:8000/api/v1/fafsa/evaluate \
 
 1. FastAPI checks the request against `EvaluationRequest`. The empty object supplies neither application fields nor a `cumulative_payload` dictionary. [api/schemas.py](api/schemas.py)
 2. FastAPI returns HTTP 422 with a `detail` message before calling the engine. The root stage never runs.
+
+<details>
+<summary>Expected output · HTTP 422 Unprocessable Entity</summary>
+
+```json
+{
+  "detail": [
+    {
+      "type": "missing",
+      "loc": [
+        "body",
+        "cumulative_payload"
+      ],
+      "msg": "Field required",
+      "input": {}
+    }
+  ]
+}
+```
+
+</details>
 
 ## Run tests
 
@@ -296,28 +857,3 @@ python -m coverage report
 - Test strategy and examples — decisions 7 and 8.
 
 [Requirements and answers](DECISIONS.md#requirements)
-
-## Example response
-
-For the request containing only `{"dependencyStatus":"independent"}`:
-
-```sh
-# {
-#   "status": "INCOMPLETE",
-#   "submitted": [
-#     {
-#       "field_name": "dependencyStatus",
-#       "status": "VALID",
-#       "violation_message": null,
-#       "rule_name": "validate_choice",
-#       "severity": "ERROR"
-#     }
-#   ],
-#   "outstanding": [
-#     "maritalStatus"
-#   ],
-#   "info": {
-#     "version": "1.0.0-alpha.1"
-#   }
-# }
-```
