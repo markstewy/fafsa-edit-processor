@@ -38,6 +38,8 @@ curl -i http://127.0.0.1:8000/api/v1/fafsa/evaluate \
   -H 'Content-Type: application/json' -d '{"dependencyStatus": "independent"}'
 ```
 
+---
+
 ### Complete an independent, single application
 
 **Stage 1: `stage_statuses` → Stage 2: `stage_independent_single`.** The first stage uses two answers to choose a checklist. For a single, independent applicant, the second stage requires student, income, household, and residence information. Parent income and spouse details are optional on this path.
@@ -69,6 +71,8 @@ curl -i http://127.0.0.1:8000/api/v1/fafsa/evaluate \
     "stateOfResidence": "CA"
   }'
 ```
+
+---
 
 ### Change the applicant to dependent
 
@@ -102,6 +106,8 @@ curl -i http://127.0.0.1:8000/api/v1/fafsa/evaluate \
     "stateOfResidence": "CA"
   }'
 ```
+
+---
 
 ### Change the applicant to married
 
@@ -137,6 +143,8 @@ curl -i http://127.0.0.1:8000/api/v1/fafsa/evaluate \
     "stateOfResidence": "CA"
   }'
 ```
+
+---
 
 ### Complete a dependent, married application
 
@@ -191,6 +199,8 @@ curl -i http://127.0.0.1:8000/api/v1/fafsa/evaluate \
 }'
 ```
 
+---
+
 ### See failed checks and missing answers together
 
 **Stage 1: `stage_statuses` → Stage 2: `stage_dependent_married`.** This applicant gives the same two routing answers as the previous applicant. They reach the same second stage, where several supplied values fail and four required answers are missing.
@@ -238,6 +248,8 @@ curl -i http://127.0.0.1:8000/api/v1/fafsa/evaluate \
 }'
 ```
 
+---
+
 ### Send fields before their stage is reached
 
 **Stage 1: `stage_statuses`** (only stage reached). The engine cannot select the second stage yet. It can still give the applicant feedback on the state and the unfamiliar field they already sent.
@@ -251,6 +263,8 @@ curl -i http://127.0.0.1:8000/api/v1/fafsa/evaluate \
 curl -i http://127.0.0.1:8000/api/v1/fafsa/evaluate \
   -H 'Content-Type: application/json' -d '{"dependencyStatus":"independent","stateOfResidence":"CA","favoriteColor":"blue"}'
 ```
+
+---
 
 ### Send an empty request object
 
