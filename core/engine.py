@@ -49,6 +49,7 @@ def evaluate_fafsa_payload(cumulative_payload: dict) -> dict:
     evaluated = {}
     outstanding = []
     stage_id = STAGE_GRAPH["root_stage"]
+    # Traverse the graph here:
     while stage_id:
         stage = STAGE_GRAPH["stages"][stage_id]
         blocked = False

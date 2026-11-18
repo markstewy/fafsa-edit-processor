@@ -47,7 +47,7 @@ class SubmittedField(BaseModel):
 class BuildInfo(BaseModel):
     version: str
 
-
+# status can be inferred from the outstanding and submitted values, but including status here bc it was an explicit requirement
 class EvaluationResponse(BaseModel):
     status: Literal["VALID", "INVALID", "INCOMPLETE"]
     submitted: list[SubmittedField]
